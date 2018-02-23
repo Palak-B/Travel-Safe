@@ -7,13 +7,15 @@ repositories {
     }
 }
 dependencies {
+    implementation 'com.android.support:appcompat-v7:22.2.1'
+    implementation 'com.android.support.constraint:constraint-layout:1.0.2'
     compile 'com.microsoft.projectoxford:speechrecognition:1.2.2'
 }
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
-
+    flavorDimensions "default"
     productFlavors {
         x86 {
             ndk {
@@ -46,4 +48,5 @@ android {
     lintOptions {
         abortOnError false
     }
+    buildToolsVersion '26.0.2'
 }

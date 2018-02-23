@@ -38,6 +38,9 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -67,6 +70,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
     //RadioGroup _radioGroup;
     //Button _buttonSelectMode;
     Button _startButton;
+    static int started=0;
 
     public enum FinalResponseStatus { NotReceived, OK, Timeout }
 
@@ -339,7 +343,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
             s=s.toLowerCase();
             if(s.contains("call"))
             {
-                Intent intent=new Intent(Intent.ACTION_CALL, Uri.parse("tel:9920118778"));
+                Intent intent=new Intent(Intent.ACTION_CALL, Uri.parse("tel:9406823968"));
                 startActivity(intent);
             }
             this.WriteLine();
@@ -482,8 +486,28 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
             finally {
                 dataClient.endAudio();
             }
-
             return null;
         }
+    }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu)
+    {
+        MenuInflater inflater=getMenuInflater();
+        inflater.inflate(R.menu.mymenu,menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case (R.id.exit):
+                finish();
+                break;
+            case (R.id.showcontact):
+                //Toast.makeText(this, "Hello",Toast.LENGTH_SHORT).show();
+                Intent i1=new Intent(MainActivity.this,EmergencyContacts.class);
+                startActivity(i1);
+                break;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }

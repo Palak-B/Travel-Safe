@@ -57,11 +57,24 @@ import com.microsoft.cognitiveservices.speechrecognition.RecognitionResult;
 import com.microsoft.cognitiveservices.speechrecognition.RecognitionStatus;
 import com.microsoft.cognitiveservices.speechrecognition.SpeechRecognitionMode;
 import com.microsoft.cognitiveservices.speechrecognition.SpeechRecognitionServiceFactory;
+
 import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
 
-public class MainActivity extends Activity implements ISpeechRecognitionServerEvents
-{
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AppCompatActivity;
+import android.widget.EditText;
+import android.widget.Toast;
+
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
+
+public class MainActivity extends Activity implements ISpeechRecognitionServerEvents {
     int m_waitSeconds = 0;
     DataRecognitionClient dataClient = null;
     MicrophoneRecognitionClient micClient = null;
@@ -70,9 +83,10 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
     //RadioGroup _radioGroup;
     //Button _buttonSelectMode;
     Button _startButton;
-    static int started=0;
+    private FusedLocationProviderClient mFusedLocationClient;
+    static int started = 0;
 
-    public enum FinalResponseStatus { NotReceived, OK, Timeout }
+    public enum FinalResponseStatus {NotReceived, OK, Timeout}
 
     /**
      * Gets the primary subscription key
@@ -124,7 +138,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
     private SpeechRecognitionMode getMode() {
         //int id = this._radioGroup.getCheckedRadioButtonId();
         //if (id == R.id.micDictationRadioButton ||id == R.id.dataLongRadioButton) {
-            //return SpeechRecognitionMode.LongDictation;
+        //return SpeechRecognitionMode.LongDictation;
         //}
 
         return SpeechRecognitionMode.ShortPhrase;
@@ -171,6 +185,32 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
         //this._radioGroup = (RadioGroup)findViewById(R.id.groupMode);
         //this._buttonSelectMode = (Button)findViewById(R.id.buttonSelectMode);
         this._startButton = (Button) findViewById(R.id.button1);
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        mFusedLocationClient.getLastLocation()
+                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+                        // Got last known location. In some rare situations this can be null.
+                        //Toast.makeText(MainActivity.this, "HelloWor", Toast.LENGTH_SHORT).show();
+                        if (location != null) {
+                            //e1.setText(location.getLatitude()+"and"+location.getLongitude());
+                            Toast.makeText(MainActivity.this,location.getLatitude()+"and"+location.getLongitude(),Toast.LENGTH_SHORT).show();
+                            //Toast.makeText(MainActivity.this, "Hello", Toast.LENGTH_SHORT).show();
+                            // Logic to handle location object
+                        }
+                    }
+                });
 
         if (getString(R.string.primaryKey).startsWith("Please")) {
             new AlertDialog.Builder(this)
@@ -216,6 +256,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
             this._logText.setVisibility(View.VISIBLE);
         }
     }*/
+
     /**
      * Handles the Click event of the _startButton control.
      */
@@ -245,12 +286,12 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
                 }
                 else
                 {*/
-                    this.micClient = SpeechRecognitionServiceFactory.createMicrophoneClient(
-                            this,
-                            this.getMode(),
-                            this.getDefaultLocale(),
-                            this,
-                            this.getPrimaryKey());
+                this.micClient = SpeechRecognitionServiceFactory.createMicrophoneClient(
+                        this,
+                        this.getMode(),
+                        this.getDefaultLocale(),
+                        this,
+                        this.getPrimaryKey());
                 //}
 
                 this.micClient.setAuthenticationUri(this.getAuthenticationUri());
@@ -305,12 +346,9 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
 
     private void SendAudioHelper(String filename) {
         RecognitionTask doDataReco = new RecognitionTask(this.dataClient, this.getMode(), filename);
-        try
-        {
+        try {
             doDataReco.execute().get(m_waitSeconds, TimeUnit.SECONDS);
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             doDataReco.cancel(true);
             isReceivedResponse = FinalResponseStatus.Timeout;
         }
@@ -338,12 +376,21 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
                 this.WriteLine("[" + i + "]" + " Confidence=" + response.Results[i].Confidence +
                         " Text=\"" + response.Results[i].DisplayText + "\"");
             }
-            Toast.makeText(this,""+response.Results[response.Results.length -1].DisplayText,Toast.LENGTH_SHORT).show();
-            String s=response.Results[response.Results.length -1].DisplayText;
-            s=s.toLowerCase();
-            if(s.contains("call"))
-            {
-                Intent intent=new Intent(Intent.ACTION_CALL, Uri.parse("tel:9406823968"));
+            Toast.makeText(this, "" + response.Results[response.Results.length - 1].DisplayText, Toast.LENGTH_SHORT).show();
+            String s = response.Results[response.Results.length - 1].DisplayText;
+            s = s.toLowerCase();
+            if (s.contains("call")) {
+                Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse("tel:9406823968"));
+                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+                    // TODO: Consider calling
+                    //    ActivityCompat#requestPermissions
+                    // here to request the missing permissions, and then overriding
+                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                    //                                          int[] grantResults)
+                    // to handle the case where the user grants the permission. See the documentation
+                    // for ActivityCompat#requestPermissions for more details.
+                    return;
+                }
                 startActivity(intent);
             }
             this.WriteLine();

@@ -34,6 +34,8 @@ package com.microsoft.CognitiveServicesExample;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
@@ -41,6 +43,7 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioGroup;
+import android.widget.Toast;
 
 import com.microsoft.bing.speech.Conversation;
 import com.microsoft.bing.speech.SpeechClientStatus;
@@ -61,8 +64,8 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
     MicrophoneRecognitionClient micClient = null;
     FinalResponseStatus isReceivedResponse = FinalResponseStatus.NotReceived;
     EditText _logText;
-    RadioGroup _radioGroup;
-    Button _buttonSelectMode;
+    //RadioGroup _radioGroup;
+    //Button _buttonSelectMode;
     Button _startButton;
 
     public enum FinalResponseStatus { NotReceived, OK, Timeout }
@@ -95,32 +98,30 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
      * @return true if [use microphone]; otherwise, false.
      */
     private Boolean getUseMicrophone() {
-        int id = this._radioGroup.getCheckedRadioButtonId();
-        return id == R.id.micIntentRadioButton ||
-                id == R.id.micDictationRadioButton ||
-                id == (R.id.micRadioButton - 1);
+        //int id = this._radioGroup.getCheckedRadioButtonId();
+        //return id == R.id.micIntentRadioButton ||id == R.id.micDictationRadioButton ||id == (R.id.micRadioButton - 1);
+        return true;
     }
 
     /**
      * Gets a value indicating whether LUIS results are desired.
      * @return true if LUIS results are to be returned otherwise, false.
      */
-    private Boolean getWantIntent() {
+    /*private Boolean getWantIntent() {
         int id = this._radioGroup.getCheckedRadioButtonId();
         return id == R.id.dataShortIntentRadioButton ||
                 id == R.id.micIntentRadioButton;
-    }
+    }*/
 
     /**
      * Gets the current speech recognition mode.
      * @return The speech recognition mode.
      */
     private SpeechRecognitionMode getMode() {
-        int id = this._radioGroup.getCheckedRadioButtonId();
-        if (id == R.id.micDictationRadioButton ||
-                id == R.id.dataLongRadioButton) {
-            return SpeechRecognitionMode.LongDictation;
-        }
+        //int id = this._radioGroup.getCheckedRadioButtonId();
+        //if (id == R.id.micDictationRadioButton ||id == R.id.dataLongRadioButton) {
+            //return SpeechRecognitionMode.LongDictation;
+        //}
 
         return SpeechRecognitionMode.ShortPhrase;
     }
@@ -163,8 +164,8 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
         setContentView(R.layout.activity_main);
 
         this._logText = (EditText) findViewById(R.id.editText1);
-        this._radioGroup = (RadioGroup)findViewById(R.id.groupMode);
-        this._buttonSelectMode = (Button)findViewById(R.id.buttonSelectMode);
+        //this._radioGroup = (RadioGroup)findViewById(R.id.groupMode);
+        //this._buttonSelectMode = (Button)findViewById(R.id.buttonSelectMode);
         this._startButton = (Button) findViewById(R.id.button1);
 
         if (getString(R.string.primaryKey).startsWith("Please")) {
@@ -180,11 +181,11 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
         this._startButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View arg0) {
-                This.StartButton_Click(arg0);
+                This.StartButton_Click();
             }
         });
 
-        this._buttonSelectMode.setOnClickListener(new OnClickListener() {
+        /*this._buttonSelectMode.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View arg0) {
                 This.ShowMenu(This._radioGroup.getVisibility() == View.INVISIBLE);
@@ -196,12 +197,12 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
             public void onCheckedChanged(RadioGroup rGroup, int checkedId) {
                 This.RadioButton_Click(rGroup, checkedId);
             }
-        });
+        });*/
 
-        this.ShowMenu(true);
+        //this.ShowMenu(true);
     }
 
-    private void ShowMenu(boolean show) {
+    /*private void ShowMenu(boolean show) {
         if (show) {
             this._radioGroup.setVisibility(View.VISIBLE);
             this._logText.setVisibility(View.INVISIBLE);
@@ -210,23 +211,23 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
             this._logText.setText("");
             this._logText.setVisibility(View.VISIBLE);
         }
-    }
+    }*/
     /**
      * Handles the Click event of the _startButton control.
      */
-    private void StartButton_Click(View arg0) {
-        this._startButton.setEnabled(false);
-        this._radioGroup.setEnabled(false);
+    private void StartButton_Click() {
+        //this._startButton.setEnabled(false);
+        //this._radioGroup.setEnabled(false);
 
         this.m_waitSeconds = this.getMode() == SpeechRecognitionMode.ShortPhrase ? 20 : 200;
 
-        this.ShowMenu(false);
+        //this.ShowMenu(false);
 
         this.LogRecognitionStart();
 
         if (this.getUseMicrophone()) {
             if (this.micClient == null) {
-                if (this.getWantIntent()) {
+                /*if (this.getWantIntent()) {
                     this.WriteLine("--- Start microphone dictation with Intent detection ----");
 
                     this.micClient =
@@ -239,21 +240,21 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
                                     this.getLuisSubscriptionID());
                 }
                 else
-                {
+                {*/
                     this.micClient = SpeechRecognitionServiceFactory.createMicrophoneClient(
                             this,
                             this.getMode(),
                             this.getDefaultLocale(),
                             this,
                             this.getPrimaryKey());
-                }
+                //}
 
                 this.micClient.setAuthenticationUri(this.getAuthenticationUri());
             }
 
             this.micClient.startMicAndRecognition();
         }
-        else
+        /*else
         {
             if (null == this.dataClient) {
                 if (this.getWantIntent()) {
@@ -279,7 +280,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
             }
 
             this.SendAudioHelper((this.getMode() == SpeechRecognitionMode.ShortPhrase) ? this.getShortWaveFile() : this.getLongWaveFile());
-        }
+        }*/
     }
 
     /**
@@ -333,7 +334,14 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
                 this.WriteLine("[" + i + "]" + " Confidence=" + response.Results[i].Confidence +
                         " Text=\"" + response.Results[i].DisplayText + "\"");
             }
-
+            Toast.makeText(this,""+response.Results[response.Results.length -1].DisplayText,Toast.LENGTH_SHORT).show();
+            String s=response.Results[response.Results.length -1].DisplayText;
+            s=s.toLowerCase();
+            if(s.contains("call"))
+            {
+                Intent intent=new Intent(Intent.ACTION_CALL, Uri.parse("tel:9920118778"));
+                startActivity(intent);
+            }
             this.WriteLine();
         }
     }
@@ -363,7 +371,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
 
     /**
      * Called when the microphone status has changed.
-     * @param recording The current recording state
+     //* @param recording The current recording state
      */
     public void onAudioEvent(boolean recording) {
         this.WriteLine("--- Microphone status change received by onAudioEvent() ---");
@@ -396,10 +404,10 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
 
     /**
      * Handles the Click event of the RadioButton control.
-     * @param rGroup The radio grouping.
-     * @param checkedId The checkedId.
+    // * @param rGroup The radio grouping.
+     //* @param checkedId The checkedId.
      */
-    private void RadioButton_Click(RadioGroup rGroup, int checkedId) {
+    /*private void RadioButton_Click(RadioGroup rGroup, int checkedId) {
         // Reset everything
         if (this.micClient != null) {
             this.micClient.endMicAndRecognition();
@@ -420,9 +428,9 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
             this.dataClient = null;
         }
 
-        this.ShowMenu(false);
+        //this.ShowMenu(false);
         this._startButton.setEnabled(true);
-    }
+    }*/
 
     /*
      * Speech recognition with data (for example from a file or audio source).  

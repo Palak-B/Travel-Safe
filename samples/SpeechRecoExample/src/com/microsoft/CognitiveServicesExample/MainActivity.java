@@ -39,6 +39,8 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -47,6 +49,7 @@ import android.os.CountDownTimer;
 import android.speech.tts.TextToSpeech;
 import android.support.v4.app.ActivityCompat;
 import android.telephony.SmsManager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -54,6 +57,8 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -69,6 +74,7 @@ import com.microsoft.cognitiveservices.speechrecognition.SpeechRecognitionMode;
 import com.microsoft.cognitiveservices.speechrecognition.SpeechRecognitionServiceFactory;
 
 import java.io.InputStream;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
@@ -83,6 +89,14 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
     //Button _buttonSelectMode;
     Button _startButton;
     TextToSpeech ttobj;
+    Button start, submit, end;
+    TextView txt;
+    EditText value;
+    String time;
+    int endpressed;
+    SeekBar sb;
+    static int c=0;
+    String loc;
 
     private FusedLocationProviderClient mFusedLocationClient;
     static int started = 0;
@@ -186,38 +200,84 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
         //this._radioGroup = (RadioGroup)findViewById(R.id.groupMode);
         //this._buttonSelectMode = (Button)findViewById(R.id.buttonSelectMode);
         this._startButton = (Button) findViewById(R.id.button1);
-        db=openOrCreateDatabase("mydb",MODE_PRIVATE,null);
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        start=(Button)findViewById(R.id.button2);
+        submit=(Button)findViewById(R.id.button3);
+        end=(Button)findViewById(R.id.button4);
+        txt=(TextView)findViewById(R.id.textView2);
+        value=(EditText)findViewById(R.id.editText3);
+        sb=(SeekBar)findViewById(R.id.seekBar);
+
+        sb.setMax(15);
+        sb.setProgress(0);
         ttobj=new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
             @Override
             public void onInit(int status) {
                 ttobj.setLanguage(Locale.UK);
             }
         });
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        mFusedLocationClient.getLastLocation()
-                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+
+        start.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                submit.setVisibility(View.VISIBLE);
+                txt.setVisibility(View.VISIBLE);
+                value.setVisibility(View.VISIBLE);
+                start.setVisibility(View.GONE);
+                ttobj.speak("How long do you wish to travel", TextToSpeech.QUEUE_FLUSH, null);
+            }
+        });
+        submit.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                end.setVisibility(View.VISIBLE);
+                submit.setVisibility(View.GONE);
+                txt.setVisibility(View.GONE);
+                value.setVisibility(View.GONE);
+                endpressed=0;
+                ttobj.speak("Wish you a happy journey", TextToSpeech.QUEUE_FLUSH, null);
+                time=value.getText()+"";
+                String s=time.substring(time.length()-2);
+                final int i=Integer.parseInt(s)*1000;
+                c=0;
+                new CountDownTimer(i,1000){
                     @Override
-                    public void onSuccess(Location location) {
-                        // Got last known location. In some rare situations this can be null.
-                        //Toast.makeText(MainActivity.this, "HelloWor", Toast.LENGTH_SHORT).show();
-                        if (location != null) {
-                            //e1.setText(location.getLatitude()+"and"+location.getLongitude());
-                            Toast.makeText(MainActivity.this,location.getLatitude()+"and"+location.getLongitude(),Toast.LENGTH_SHORT).show();
-                            //Toast.makeText(MainActivity.this, "Hello", Toast.LENGTH_SHORT).show();
-                            // Logic to handle location object
+                    public void onTick(long l) {
+                        c++;
+                        if(c==16)
+                        {
+                            c=0;
+                            sb.setProgress(0);
+                        }
+                        else
+                            sb.setProgress(c);
+                        if(c==11)
+                        {
+                            end.setVisibility(View.GONE);
+                            endpressed=1;
+                            ttobj.speak("Emergency mode activated", TextToSpeech.QUEUE_FLUSH, null);
+                            StartButton_Click();
                         }
                     }
-                });
+                    @Override
+                    public void onFinish() {
+                        if(endpressed!=1) {
+                            ttobj.speak("Your travel time has ended, have you reached your destination safely", TextToSpeech.QUEUE_FLUSH, null);
+                            StartButton_Click();
+                        }
+                    }
+                }.start();
+            }
+        });
+        end.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                end.setVisibility(View.GONE);
+                start.setVisibility(View.VISIBLE);
+                endpressed=1;
+            }
+        });
+        db=openOrCreateDatabase("mydb",MODE_PRIVATE,null);
+
 
         if (getString(R.string.primaryKey).startsWith("Please")) {
             new AlertDialog.Builder(this)
@@ -235,11 +295,10 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
                 This.StartButton_Click();
             }
         });
-
         /*this._buttonSelectMode.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View arg0) {
-                This.ShowMenu(This._radioGroup.getVisibility() == View.INVISIBLE);
+                This.ShowMenu(This._radioGroup.getVisibility() == View.GONE);
             }
         });
 
@@ -256,9 +315,9 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
     /*private void ShowMenu(boolean show) {
         if (show) {
             this._radioGroup.setVisibility(View.VISIBLE);
-            this._logText.setVisibility(View.INVISIBLE);
+            this._logText.setVisibility(View.GONE);
         } else {
-            this._radioGroup.setVisibility(View.INVISIBLE);
+            this._radioGroup.setVisibility(View.GONE);
             this._logText.setText("");
             this._logText.setVisibility(View.VISIBLE);
         }
@@ -306,6 +365,35 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
 
             this.micClient.startMicAndRecognition();
         }
+        start.setVisibility(View.VISIBLE);
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        mFusedLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
+            @Override
+            public void onSuccess(Location location) {
+                // Got last known location. In some rare situations this can be null.
+                //Toast.makeText(MainActivity.this, "HelloWor", Toast.LENGTH_SHORT).show();
+                if (location != null) {
+                    //e1.setText(location.getLatitude()+"and"+location.getLongitude());
+                    //Toast.makeText(MainActivity.this,location.getLatitude()+"and"+location.getLongitude(),Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(MainActivity.this,location.getLatitude()+"",Toast.LENGTH_SHORT).show();
+                    loc=getCompleteAddressString(location.getLatitude(),location.getLongitude());
+                    //Toast.makeText(MainActivity.this,location.getLongitude()+"",Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(MainActivity.this,loc+"",Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(MainActivity.this, "Hello", Toast.LENGTH_SHORT).show();
+                    // Logic to handle location object
+                }
+            }
+        });
         /*else
         {
             if (null == this.dataClient) {
@@ -333,6 +421,29 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
 
             this.SendAudioHelper((this.getMode() == SpeechRecognitionMode.ShortPhrase) ? this.getShortWaveFile() : this.getLongWaveFile());
         }*/
+    }
+    private String getCompleteAddressString(double LATITUDE, double LONGITUDE) {
+        String strAdd = "";
+        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+        try {
+            List<Address> addresses = geocoder.getFromLocation(LATITUDE, LONGITUDE, 1);
+            if (addresses != null) {
+                Address returnedAddress = addresses.get(0);
+                StringBuilder strReturnedAddress = new StringBuilder("");
+
+                for (int i = 0; i <= returnedAddress.getMaxAddressLineIndex(); i++) {
+                    strReturnedAddress.append(returnedAddress.getAddressLine(i)).append("\n");
+                }
+                strAdd = strReturnedAddress.toString();
+                Log.w("Location address", strReturnedAddress.toString());
+            } else {
+                Log.w("Location address", "No Address returned!");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.w("Location address", "Canont get Address!");
+        }
+        return strAdd;
     }
 
     /**
@@ -395,7 +506,8 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
                     while(c.moveToNext())
                     {
                         num=c.getString(1);
-                        String msg="I have met with an accident and it is an emergency! Please come to help me....IGNORE";
+                        String msg="I have met with an accident and it is an emergency! Please come to help me....IGNORE "+loc;
+                        //Toast.makeText(this,msg,Toast.LENGTH_SHORT).show();
                         /*Intent intent=new Intent(Intent.ACTION_VIEW,Uri.parse("sms:"+num));
                         intent.putExtra("sms_body","I have met with an accident and it is an emergency! Please come to help me....IGNORE");
                         startActivity(intent);*/
@@ -403,7 +515,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
                         sms.sendTextMessage(num,null,msg,null,null);
                     }
                 }
-                if (s.contains("call")) {
+                else if (s.contains("call")) {
                     Cursor c1=db.rawQuery("select * from contacts",null);
                     int flag=0;
                     while (c1.moveToNext()) {
@@ -458,6 +570,26 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
                         }
 
                 }
+                else if(s.contains("yes"))
+                {
+                    end.setVisibility(View.GONE);
+                    start.setVisibility(View.VISIBLE);
+                }
+                else if(s.contains("no"))
+                {
+                    new CountDownTimer(5000,1000){
+                        @Override
+                        public void onTick(long l) {
+
+                        }
+
+                        @Override
+                        public void onFinish() {
+                            StartButton_Click();
+                        }
+                    }.start();
+                }
+                start.setVisibility(View.VISIBLE);
             }
             this.WriteLine();
         }

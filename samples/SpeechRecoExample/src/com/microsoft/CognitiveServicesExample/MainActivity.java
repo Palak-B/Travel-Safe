@@ -37,11 +37,15 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.speech.tts.TextToSpeech;
 import android.support.v4.app.ActivityCompat;
+import android.telephony.SmsManager;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -64,6 +68,7 @@ import com.microsoft.cognitiveservices.speechrecognition.SpeechRecognitionMode;
 import com.microsoft.cognitiveservices.speechrecognition.SpeechRecognitionServiceFactory;
 
 import java.io.InputStream;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends Activity implements ISpeechRecognitionServerEvents {
@@ -72,9 +77,12 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
     MicrophoneRecognitionClient micClient = null;
     FinalResponseStatus isReceivedResponse = FinalResponseStatus.NotReceived;
     EditText _logText;
+    SQLiteDatabase db;
     //RadioGroup _radioGroup;
     //Button _buttonSelectMode;
     Button _startButton;
+    TextToSpeech ttobj;
+
     private FusedLocationProviderClient mFusedLocationClient;
     static int started = 0;
 
@@ -177,8 +185,14 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
         //this._radioGroup = (RadioGroup)findViewById(R.id.groupMode);
         //this._buttonSelectMode = (Button)findViewById(R.id.buttonSelectMode);
         this._startButton = (Button) findViewById(R.id.button1);
+        db=openOrCreateDatabase("mydb",MODE_PRIVATE,null);
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-
+        ttobj=new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                ttobj.setLanguage(Locale.UK);
+            }
+        });
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
@@ -372,6 +386,22 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
                 Toast.makeText(this, "" + response.Results[response.Results.length - 1].DisplayText, Toast.LENGTH_SHORT).show();
                 String s = response.Results[response.Results.length - 1].DisplayText;
                 s = s.toLowerCase();
+                if(s.contains("help"))
+                {
+                    ttobj.speak("Sending message to your emergency contacts", TextToSpeech.QUEUE_FLUSH, null);
+                    Cursor c=db.rawQuery("select * from emergency_contacts",null);
+                    String num;
+                    while(c.moveToNext())
+                    {
+                        num=c.getString(1);
+                        String msg="I have met with an accident and it is an emergency! Please come to help me....IGNORE";
+                        /*Intent intent=new Intent(Intent.ACTION_VIEW,Uri.parse("sms:"+num));
+                        intent.putExtra("sms_body","I have met with an accident and it is an emergency! Please come to help me....IGNORE");
+                        startActivity(intent);*/
+                        SmsManager sms=SmsManager.getDefault();
+                        sms.sendTextMessage(num,null,msg,null,null);
+                    }
+                }
                 if (s.contains("call")) {
                     Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse("tel:9406823968"));
                     if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {

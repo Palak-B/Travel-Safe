@@ -10,10 +10,12 @@
 
     <Button
         android:id="@+id/button1"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:text="Start" />
+        android:layout_centerVertical="true"
+        android:layout_toEndOf="@+id/editText1"
+        android:text="EMERGENCY MODE"
+        android:background="#FF0000"/>
 
     <EditText
         android:id="@+id/editText1"

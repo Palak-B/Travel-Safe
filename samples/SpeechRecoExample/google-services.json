@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "173508004735",
+    "firebase_url": "https://travel-safe-92d0b.firebaseio.com",
+    "project_id": "travel-safe-92d0b",
+    "storage_bucket": "travel-safe-92d0b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:173508004735:android:d5af76a0244b1d8b",
+        "android_client_info": {
+          "package_name": "com.microsoft.CognitiveServicesExample"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "173508004735-1ikjqeqjq8bl4199nda5uugla46s09em.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_ydEeAkwnReDvAwuUbLqXrF9dyf9J0Y4"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

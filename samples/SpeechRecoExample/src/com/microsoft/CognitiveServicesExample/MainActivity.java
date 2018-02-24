@@ -32,12 +32,16 @@
  */
 package com.microsoft.CognitiveServicesExample;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Location;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -45,10 +49,11 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.RadioGroup;
 import android.widget.Toast;
 
-import com.microsoft.bing.speech.Conversation;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.microsoft.bing.speech.SpeechClientStatus;
 import com.microsoft.cognitiveservices.speechrecognition.DataRecognitionClient;
 import com.microsoft.cognitiveservices.speechrecognition.ISpeechRecognitionServerEvents;
@@ -60,19 +65,6 @@ import com.microsoft.cognitiveservices.speechrecognition.SpeechRecognitionServic
 
 import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
-
-import android.Manifest;
-import android.content.pm.PackageManager;
-import android.location.Location;
-import android.os.Bundle;
-import android.support.v4.app.ActivityCompat;
-import android.support.v7.app.AppCompatActivity;
-import android.widget.EditText;
-import android.widget.Toast;
-
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.tasks.OnSuccessListener;
 
 public class MainActivity extends Activity implements ISpeechRecognitionServerEvents {
     int m_waitSeconds = 0;
@@ -376,22 +368,24 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
                 this.WriteLine("[" + i + "]" + " Confidence=" + response.Results[i].Confidence +
                         " Text=\"" + response.Results[i].DisplayText + "\"");
             }
-            Toast.makeText(this, "" + response.Results[response.Results.length - 1].DisplayText, Toast.LENGTH_SHORT).show();
-            String s = response.Results[response.Results.length - 1].DisplayText;
-            s = s.toLowerCase();
-            if (s.contains("call")) {
-                Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse("tel:9406823968"));
-                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
-                    // TODO: Consider calling
-                    //    ActivityCompat#requestPermissions
-                    // here to request the missing permissions, and then overriding
-                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                    //                                          int[] grantResults)
-                    // to handle the case where the user grants the permission. See the documentation
-                    // for ActivityCompat#requestPermissions for more details.
-                    return;
+            if(response.Results.length>0) {
+                Toast.makeText(this, "" + response.Results[response.Results.length - 1].DisplayText, Toast.LENGTH_SHORT).show();
+                String s = response.Results[response.Results.length - 1].DisplayText;
+                s = s.toLowerCase();
+                if (s.contains("call")) {
+                    Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse("tel:9406823968"));
+                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+                        // TODO: Consider calling
+                        //    ActivityCompat#requestPermissions
+                        // here to request the missing permissions, and then overriding
+                        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                        //                                          int[] grantResults)
+                        // to handle the case where the user grants the permission. See the documentation
+                        // for ActivityCompat#requestPermissions for more details.
+                        return;
+                    }
+                    startActivity(intent);
                 }
-                startActivity(intent);
             }
             this.WriteLine();
         }

@@ -51,7 +51,7 @@ public class EmergencyContacts extends AppCompatActivity {
         k=0;
         while(c.moveToNext())
         {
-            if(k<4) {
+            if(k<5) {
                 name[k] = c.getString(0);
                 number[k++] = c.getString(1);
             }

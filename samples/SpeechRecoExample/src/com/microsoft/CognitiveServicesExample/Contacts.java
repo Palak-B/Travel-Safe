@@ -58,5 +58,6 @@ public class Contacts extends AppCompatActivity {
         }
         Intent i=new Intent(this, EmergencyContacts.class);
         startActivity(i);
+        finish();
     }
 }

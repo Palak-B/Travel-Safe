@@ -43,6 +43,7 @@ import android.location.Location;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.speech.tts.TextToSpeech;
 import android.support.v4.app.ActivityCompat;
 import android.telephony.SmsManager;
@@ -404,11 +405,10 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
                 }
                 if (s.contains("call")) {
                     Cursor c1=db.rawQuery("select * from contacts",null);
-                    while (c1.moveToNext())
-                    {
-                        if(s.contains(c1.getString(0)))
-                        {
-                            Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse("tel:"+c1.getString(1)));
+                    int flag=0;
+                    while (c1.moveToNext()) {
+                        if (s.contains(c1.getString(0))) {
+                            Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse("tel:" + c1.getString(1)));
                             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
                                 // TODO: Consider calling
                                 //    ActivityCompat#requestPermissions
@@ -419,9 +419,44 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
                                 // for ActivityCompat#requestPermissions for more details.
                                 return;
                             }
+                            flag=1;
                             startActivity(intent);
+                            break;
                         }
                     }
+                        if(flag==0)
+                        {
+                            ttobj.speak("Could not detect any contact with that name. Calling your first emergency contact", TextToSpeech.QUEUE_FLUSH, null);
+                            new CountDownTimer(5000,1000){
+                                @Override
+                                public void onTick(long l) {
+
+                                }
+
+                                @Override
+                                public void onFinish() {
+                                    Cursor c2=db.rawQuery("select * from emergency_contacts",null);
+                                    while(c2.moveToNext())
+                                    {
+                                        Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse("tel:"+c2.getString(1)));
+                                        if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+                                            // TODO: Consider calling
+                                            //    ActivityCompat#requestPermissions
+                                            // here to request the missing permissions, and then overriding
+                                            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                                            //                                          int[] grantResults)
+                                            // to handle the case where the user grants the permission. See the documentation
+                                            // for ActivityCompat#requestPermissions for more details.
+                                            return;
+                                        }
+                                        startActivity(intent);
+                                        break;
+                                    }
+                                }
+                            }.start();
+
+                        }
+
                 }
             }
             this.WriteLine();

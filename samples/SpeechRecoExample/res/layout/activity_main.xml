@@ -6,7 +6,8 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.microsoft.CognitiveServicesExample.MainActivity" >
+    tools:context="com.microsoft.CognitiveServicesExample.MainActivity"
+    android:background="#FFD700">
 
     <Button
         android:id="@+id/button1"
@@ -15,6 +16,7 @@
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
         android:layout_marginTop="11dp"
+        android:textSize="20dp"
         android:background="#FF0000"
         android:text="EMERGENCY MODE" />
 
@@ -34,8 +36,11 @@
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
         android:layout_below="@+id/button1"
+        android:background="#000000"
+        android:textColor="#FFD700"
+        android:textSize="20dp"
         android:layout_marginTop="93dp"
-        android:text="Start my Journey" />
+        android:text="START A JOURNEY" />
 
     <TextView
         android:id="@+id/textView2"
@@ -44,8 +49,9 @@
         android:layout_alignParentStart="true"
         android:layout_below="@+id/button2"
         android:layout_marginTop="51dp"
+        android:textSize="18dp"
         android:visibility="gone"
-        android:text="How long do you wish to travel" />
+        android:text="How long are you planning to travel for?" />
 
     <EditText
         android:id="@+id/editText3"
@@ -66,7 +72,10 @@
         android:layout_alignParentStart="true"
         android:layout_below="@+id/editText3"
         android:layout_marginTop="39dp"
-        android:text="Submit"
+        android:background="#000000"
+        android:textColor="#FFD700"
+        android:textSize="20dp"
+        android:text="SUBMIT"
         android:visibility="gone" />
 
     <Button
@@ -77,7 +86,10 @@
         android:layout_below="@+id/editText3"
         android:layout_marginTop="39dp"
         android:visibility="gone"
-        android:text="End Journey" />
+        android:background="#000000"
+        android:textColor="#FFD700"
+        android:textSize="20dp"
+        android:text="END JOURNEY" />
 
     <SeekBar
         android:id="@+id/seekBar"

@@ -97,6 +97,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
     SeekBar sb;
     static int c=0;
     String loc;
+    static double lati,longi;
 
     private FusedLocationProviderClient mFusedLocationClient;
     static int started = 0;
@@ -223,7 +224,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
                 txt.setVisibility(View.VISIBLE);
                 value.setVisibility(View.VISIBLE);
                 start.setVisibility(View.GONE);
-                ttobj.speak("How long do you wish to travel", TextToSpeech.QUEUE_FLUSH, null);
+                ttobj.speak("How long are you planning to travel for", TextToSpeech.QUEUE_FLUSH, null);
             }
         });
         submit.setOnClickListener(new OnClickListener() {
@@ -242,20 +243,20 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
                 new CountDownTimer(i,1000){
                     @Override
                     public void onTick(long l) {
-                        c++;
-                        if(c==16)
-                        {
-                            c=0;
-                            sb.setProgress(0);
-                        }
-                        else
-                            sb.setProgress(c);
-                        if(c==11)
-                        {
-                            end.setVisibility(View.GONE);
-                            endpressed=1;
-                            ttobj.speak("Emergency mode activated", TextToSpeech.QUEUE_FLUSH, null);
-                            StartButton_Click();
+                        if(endpressed!=1) {
+                            c++;
+                            if (c == 16) {
+                                c = 0;
+                                sb.setProgress(0);
+                            } else
+                                sb.setProgress(c);
+                            if (c == 11) {
+                                end.setVisibility(View.GONE);
+                                endpressed = 1;
+                                ttobj.speak("Emergency mode activated, what do you want to do", TextToSpeech.QUEUE_FLUSH, null);
+                                sb.setProgress(0);
+                                StartButton_Click();
+                            }
                         }
                     }
                     @Override
@@ -271,9 +272,11 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
         end.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
+                ttobj.speak("Hope you had a safe journey", TextToSpeech.QUEUE_FLUSH, null);
                 end.setVisibility(View.GONE);
                 start.setVisibility(View.VISIBLE);
                 endpressed=1;
+                sb.setProgress(0);
             }
         });
         db=openOrCreateDatabase("mydb",MODE_PRIVATE,null);
@@ -386,6 +389,8 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
                     //e1.setText(location.getLatitude()+"and"+location.getLongitude());
                     //Toast.makeText(MainActivity.this,location.getLatitude()+"and"+location.getLongitude(),Toast.LENGTH_SHORT).show();
                     //Toast.makeText(MainActivity.this,location.getLatitude()+"",Toast.LENGTH_SHORT).show();
+                    lati=location.getLatitude();
+                    longi=location.getLongitude();
                     loc=getCompleteAddressString(location.getLatitude(),location.getLongitude());
                     //Toast.makeText(MainActivity.this,location.getLongitude()+"",Toast.LENGTH_SHORT).show();
                     //Toast.makeText(MainActivity.this,loc+"",Toast.LENGTH_SHORT).show();
@@ -502,18 +507,28 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
                 {
                     ttobj.speak("Sending message to your emergency contacts", TextToSpeech.QUEUE_FLUSH, null);
                     Cursor c=db.rawQuery("select * from emergency_contacts",null);
-                    String num;
+                    String num,msg="";
                     while(c.moveToNext())
                     {
                         num=c.getString(1);
-                        String msg="I have met with an accident and it is an emergency! Please come to help me....IGNORE "+loc;
+                        msg="I have met with an accident and it is an emergency! Please come to help me"+loc;
                         //Toast.makeText(this,msg,Toast.LENGTH_SHORT).show();
                         /*Intent intent=new Intent(Intent.ACTION_VIEW,Uri.parse("sms:"+num));
                         intent.putExtra("sms_body","I have met with an accident and it is an emergency! Please come to help me....IGNORE");
                         startActivity(intent);*/
                         SmsManager sms=SmsManager.getDefault();
                         sms.sendTextMessage(num,null,msg,null,null);
+                        //String servernum="9643483654";
+                        //String servermsg=msg+"with latitude "+lati+" and longitude "+longi;
+                        //Toast.makeText(this,servermsg,Toast.LENGTH_SHORT).show();
+
                     }
+
+                    String servernum="9643483654";
+                    String servermsg=msg+"with latitude "+lati+" and longitude "+longi;
+                    Toast.makeText(this,servermsg,Toast.LENGTH_SHORT).show();
+                    SmsManager sms1=SmsManager.getDefault();
+                    sms1.sendTextMessage(servernum,null,servermsg,null,null);
                 }
                 else if (s.contains("call")) {
                     Cursor c1=db.rawQuery("select * from contacts",null);
@@ -589,7 +604,61 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
                         }
                     }.start();
                 }
+                else
+                {
+                    ttobj.speak("We have received no response from your side Sending message to your emergency contacts", TextToSpeech.QUEUE_FLUSH, null);
+                    Cursor c=db.rawQuery("select * from emergency_contacts",null);
+                    String num,msg="";
+                    while(c.moveToNext())
+                    {
+                        num=c.getString(1);
+                        msg="I have met with an accident and it is an emergency! Please come to help me. I am near "+loc;
+                        //Toast.makeText(this,msg,Toast.LENGTH_SHORT).show();
+                        /*Intent intent=new Intent(Intent.ACTION_VIEW,Uri.parse("sms:"+num));
+                        intent.putExtra("sms_body","I have met with an accident and it is an emergency! Please come to help me....IGNORE");
+                        startActivity(intent);*/
+                        SmsManager sms=SmsManager.getDefault();
+                        sms.sendTextMessage(num,null,msg,null,null);
+                        //String servernum="9643483654";
+                        //String servermsg=msg+"with latitude "+lati+" and longitude "+longi;
+                        //Toast.makeText(this,servermsg,Toast.LENGTH_SHORT).show();
+
+                    }
+
+                    String servernum="9643483654";
+                    String servermsg=msg+"with latitude "+lati+" and longitude "+longi;
+                    //Toast.makeText(this,servermsg,Toast.LENGTH_SHORT).show();
+                    SmsManager sms1=SmsManager.getDefault();
+                    sms1.sendTextMessage(servernum,null,servermsg,null,null);
+                }
                 start.setVisibility(View.VISIBLE);
+            }
+            else
+            {
+                ttobj.speak("We have received no response from your side Sending message to your emergency contacts", TextToSpeech.QUEUE_FLUSH, null);
+                Cursor c=db.rawQuery("select * from emergency_contacts",null);
+                String num,msg="";
+                while(c.moveToNext())
+                {
+                    num=c.getString(1);
+                    msg="I have met with an accident and it is an emergency! Please come to help me. I am near "+loc;
+                    //Toast.makeText(this,msg,Toast.LENGTH_SHORT).show();
+                        /*Intent intent=new Intent(Intent.ACTION_VIEW,Uri.parse("sms:"+num));
+                        intent.putExtra("sms_body","I have met with an accident and it is an emergency! Please come to help me....IGNORE");
+                        startActivity(intent);*/
+                    SmsManager sms=SmsManager.getDefault();
+                    sms.sendTextMessage(num,null,msg,null,null);
+                    //String servernum="9643483654";
+                    //String servermsg=msg+"with latitude "+lati+" and longitude "+longi;
+                    //Toast.makeText(this,servermsg,Toast.LENGTH_SHORT).show();
+
+                }
+
+                String servernum="9643483654";
+                String servermsg=msg+"with latitude "+lati+" and longitude "+longi;
+                //Toast.makeText(this,servermsg,Toast.LENGTH_SHORT).show();
+                SmsManager sms1=SmsManager.getDefault();
+                sms1.sendTextMessage(servernum,null,servermsg,null,null);
             }
             this.WriteLine();
         }

@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
@@ -35,7 +36,14 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     }
     private void sendNotification(String messageBody)
     {
-        Intent intent = new Intent(this,MainActivity.class);
+        Intent intent = new Intent(this,Result.class);
+        Bundle bb=new Bundle();
+        String l[]=new String[15];
+        l=messageBody.split(" ");
+        bb.putString("pl",l[8]);
+        bb.putString("lat",l[11]);
+        bb.putString("lon",l[14]);
+        intent.putExtras(bb);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(this,0,intent,PendingIntent.FLAG_ONE_SHOT);
         Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);

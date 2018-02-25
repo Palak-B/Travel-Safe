@@ -3,8 +3,8 @@ package com.microsoft.CognitiveServicesExample;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -49,17 +49,26 @@ public class EmergencyContacts extends AppCompatActivity {
             c=null;
 
         k=0;
+        int c1=0;
         while(c.moveToNext())
         {
             if(k<5) {
                 name[k] = c.getString(0);
                 number[k++] = c.getString(1);
+                if(k==5)
+                    c1=1;
             }
             else {
                 //Toast.makeText(EmergencyContacts.this, "5 contacts only!", Toast.LENGTH_SHORT).show();
                 b.setVisibility(View.GONE);
                 b1.setVisibility(View.VISIBLE);
             }
+            if(c1==1)
+            {
+                b.setVisibility(View.GONE);
+                b1.setVisibility(View.VISIBLE);
+            }
+
         }
         for(int i=k;i<5;i++)
             name[i]="Enter contact information "+(i+1);

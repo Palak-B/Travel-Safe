@@ -24,19 +24,17 @@
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
-        android:label="Travel Safe"
+        android:label="TRAVEL SAFE"
         android:theme="@style/AppTheme">
         <activity
             android:name=".MainActivity"
-            android:label="Travel Safe"></activity>
+            android:label="TRAVEL SAFE" />
         <activity
             android:name=".EmergencyContacts"
-            android:theme="@style/Theme.AppCompat.Light">
-
-        </activity>
+            android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar"></activity>
         <activity
             android:name=".ContactInfo"
-            android:theme="@style/Theme.AppCompat.Light" />
+            android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar" />
 
         <service android:name=".MyFirebaseMessagingService">
             <intent-filter>
@@ -49,14 +47,17 @@
             </intent-filter>
         </service>
 
-        <activity android:name=".Contacts"
-            android:theme="@style/Theme.AppCompat.Light">
+        <activity
+            android:name=".Contacts"
+            android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".Result"
+            android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar"></activity>
     </application>
 
 </manifest>

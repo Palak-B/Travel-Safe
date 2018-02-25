@@ -108,26 +108,12 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
     String loc;
     static double lati,longi;
     int sensorstart=0;
+    int ss=0;
 
     private FusedLocationProviderClient mFusedLocationClient;
     static int started = 0;
 
-    @Override
-    public void onSensorChanged(SensorEvent sensorEvent) {
-        if(sensorstart==1) {
-            float distance = sensorEvent.values[0];
-            count++;
-            if (count == 5) {
-                ttobj.speak("We detected some disturbance what can I do for you. Say no for dismissal", TextToSpeech.QUEUE_FLUSH, null);
-                StartButton_Click();
-            }
-        }
-    }
 
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int i) {
-
-    }
 
     public enum FinalResponseStatus {NotReceived, OK, Timeout}
 
@@ -287,7 +273,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
 
                     @Override
                     public void onFinish() {
-                        if(endpressed!=1) {
+                        if(endpressed!=1 && ss==0) {
                             end.setVisibility(View.GONE);
                             ttobj.speak("Your travel time has ended, have you reached your destination safely", TextToSpeech.QUEUE_FLUSH, null);
                             StartButton_Click();
@@ -617,6 +603,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
                 {
                     end.setVisibility(View.GONE);
                     start.setVisibility(View.VISIBLE);
+                    ttobj.speak("Thanks you may continue your journey", TextToSpeech.QUEUE_FLUSH, null);
                 }
                 else if(s.contains("no"))
                 {
@@ -854,5 +841,36 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
         // Be sure to unregister the sensor when the activity pauses.
         super.onPause();
         mSensorManager.unregisterListener(this);
+    }
+    @Override
+    public void onSensorChanged(SensorEvent sensorEvent) {
+        if(sensorstart==1) {
+            float distance = sensorEvent.values[0];
+            count++;
+            if (count == 5) {
+                ss=1;
+                count=0;
+                ttobj.speak("We detected some disturbance what can I do for you. Say no for dismissal", TextToSpeech.QUEUE_FLUSH, null);
+                new CountDownTimer(4000,1000){
+
+                    @Override
+                    public void onTick(long l) {
+
+                    }
+
+                    @Override
+                    public void onFinish() {
+                        StartButton_Click();
+                    }
+                }.start();
+                end.setVisibility(View.GONE);
+                start.setVisibility(View.VISIBLE);
+            }
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int i) {
+
     }
 }

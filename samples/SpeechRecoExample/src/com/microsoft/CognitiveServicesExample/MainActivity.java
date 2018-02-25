@@ -35,10 +35,15 @@ package com.microsoft.CognitiveServicesExample;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -78,13 +83,17 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
-public class MainActivity extends Activity implements ISpeechRecognitionServerEvents {
+public class MainActivity extends Activity implements ISpeechRecognitionServerEvents, SensorEventListener {
     int m_waitSeconds = 0;
     DataRecognitionClient dataClient = null;
     MicrophoneRecognitionClient micClient = null;
     FinalResponseStatus isReceivedResponse = FinalResponseStatus.NotReceived;
     EditText _logText;
     SQLiteDatabase db;
+    private SensorManager mSensorManager;
+    private Sensor mProximity;
+    EditText e1,e2;
+    int count=0;
     //RadioGroup _radioGroup;
     //Button _buttonSelectMode;
     Button _startButton;
@@ -98,9 +107,27 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
     static int c=0;
     String loc;
     static double lati,longi;
+    int sensorstart=0;
 
     private FusedLocationProviderClient mFusedLocationClient;
     static int started = 0;
+
+    @Override
+    public void onSensorChanged(SensorEvent sensorEvent) {
+        if(sensorstart==1) {
+            float distance = sensorEvent.values[0];
+            count++;
+            if (count == 5) {
+                ttobj.speak("We detected some disturbance what can I do for you. Say no for dismissal", TextToSpeech.QUEUE_FLUSH, null);
+                StartButton_Click();
+            }
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int i) {
+
+    }
 
     public enum FinalResponseStatus {NotReceived, OK, Timeout}
 
@@ -207,6 +234,8 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
         txt=(TextView)findViewById(R.id.textView2);
         value=(EditText)findViewById(R.id.editText3);
         sb=(SeekBar)findViewById(R.id.seekBar);
+        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        mProximity = mSensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
 
         sb.setMax(15);
         sb.setProgress(0);
@@ -220,6 +249,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
         start.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
+
                 submit.setVisibility(View.VISIBLE);
                 txt.setVisibility(View.VISIBLE);
                 value.setVisibility(View.VISIBLE);
@@ -230,6 +260,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
         submit.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
+                sensorstart=1;
                 end.setVisibility(View.VISIBLE);
                 submit.setVisibility(View.GONE);
                 txt.setVisibility(View.GONE);
@@ -237,31 +268,27 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
                 endpressed=0;
                 ttobj.speak("Wish you a happy journey", TextToSpeech.QUEUE_FLUSH, null);
                 time=value.getText()+"";
-                String s=time.substring(time.length()-2);
-                final int i=Integer.parseInt(s)*1000;
+                //String s=time.substring(time.length()-1);
+                final int i=Integer.parseInt(time)*1000;
                 c=0;
                 new CountDownTimer(i,1000){
                     @Override
                     public void onTick(long l) {
                         if(endpressed!=1) {
-                            c++;
-                            if (c == 16) {
-                                c = 0;
-                                sb.setProgress(0);
-                            } else
-                                sb.setProgress(c);
-                            if (c == 11) {
-                                end.setVisibility(View.GONE);
-                                endpressed = 1;
-                                ttobj.speak("Emergency mode activated, what do you want to do", TextToSpeech.QUEUE_FLUSH, null);
-                                sb.setProgress(0);
-                                StartButton_Click();
+
+                                //end.setVisibility(View.GONE);
+
+                                //ttobj.speak("Emergency mode activated, what can I do for you", TextToSpeech.QUEUE_FLUSH, null);
+
+
+                                //StartButton_Click();
                             }
                         }
-                    }
+
                     @Override
                     public void onFinish() {
                         if(endpressed!=1) {
+                            end.setVisibility(View.GONE);
                             ttobj.speak("Your travel time has ended, have you reached your destination safely", TextToSpeech.QUEUE_FLUSH, null);
                             StartButton_Click();
                         }
@@ -272,6 +299,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
         end.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
+                sensorstart=0;
                 ttobj.speak("Hope you had a safe journey", TextToSpeech.QUEUE_FLUSH, null);
                 end.setVisibility(View.GONE);
                 start.setVisibility(View.VISIBLE);
@@ -526,9 +554,9 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
 
                     String servernum="9643483654";
                     String servermsg=msg+"with latitude "+lati+" and longitude "+longi;
-                    Toast.makeText(this,servermsg,Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(this,servermsg,Toast.LENGTH_SHORT).show();
                     SmsManager sms1=SmsManager.getDefault();
-                    sms1.sendTextMessage(servernum,null,servermsg,null,null);
+                    //sms1.sendTextMessage(servernum,null,servermsg,null,null);
                 }
                 else if (s.contains("call")) {
                     Cursor c1=db.rawQuery("select * from contacts",null);
@@ -592,17 +620,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
                 }
                 else if(s.contains("no"))
                 {
-                    new CountDownTimer(5000,1000){
-                        @Override
-                        public void onTick(long l) {
-
-                        }
-
-                        @Override
-                        public void onFinish() {
-                            StartButton_Click();
-                        }
-                    }.start();
+                    ttobj.speak("Thanks you may continue your journey", TextToSpeech.QUEUE_FLUSH, null);
                 }
                 else
                 {
@@ -820,8 +838,21 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
                 //Toast.makeText(this, "Hello",Toast.LENGTH_SHORT).show();
                 Intent i1=new Intent(MainActivity.this,EmergencyContacts.class);
                 startActivity(i1);
+                finish();
                 break;
         }
         return super.onOptionsItemSelected(item);
+    }
+    protected void onResume() {
+        // Register a listener for the sensor.
+        super.onResume();
+        mSensorManager.registerListener(this, mProximity, SensorManager.SENSOR_DELAY_NORMAL);
+    }
+
+    @Override
+    protected void onPause() {
+        // Be sure to unregister the sensor when the activity pauses.
+        super.onPause();
+        mSensorManager.unregisterListener(this);
     }
 }

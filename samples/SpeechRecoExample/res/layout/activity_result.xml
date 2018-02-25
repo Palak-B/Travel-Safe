@@ -4,7 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.microsoft.CognitiveServicesExample.Result">
+    tools:context="com.microsoft.CognitiveServicesExample.Result"
+    android:background="#FFD700">
 
     <Button
         android:id="@+id/button5"
@@ -13,6 +14,9 @@
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
         android:layout_marginTop="127dp"
+        android:background="#000000"
+        android:textColor="#FFD700"
+        android:textSize="20dp"
         android:text="SHOW" />
 
     <TextView

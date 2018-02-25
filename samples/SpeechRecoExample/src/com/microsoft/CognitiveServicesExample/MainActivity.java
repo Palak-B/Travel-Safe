@@ -60,9 +60,12 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.SeekBar;
+
+
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -88,11 +91,11 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
     DataRecognitionClient dataClient = null;
     MicrophoneRecognitionClient micClient = null;
     FinalResponseStatus isReceivedResponse = FinalResponseStatus.NotReceived;
-    EditText _logText;
+
     SQLiteDatabase db;
     private SensorManager mSensorManager;
     private Sensor mProximity;
-    EditText e1,e2;
+
     int count=0;
     //RadioGroup _radioGroup;
     //Button _buttonSelectMode;
@@ -100,15 +103,18 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
     TextToSpeech ttobj;
     Button start, submit, end;
     TextView txt;
-    EditText value;
+
     String time;
     int endpressed;
-    SeekBar sb;
+
     static int c=0;
     String loc;
     static double lati,longi;
     int sensorstart=0;
     int ss=0;
+    Spinner sp;
+    String ts;
+    int ti;
 
     private FusedLocationProviderClient mFusedLocationClient;
     static int started = 0;
@@ -210,21 +216,33 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        this._logText = (EditText) findViewById(R.id.editText1);
+
         //this._radioGroup = (RadioGroup)findViewById(R.id.groupMode);
         //this._buttonSelectMode = (Button)findViewById(R.id.buttonSelectMode);
-        this._startButton = (Button) findViewById(R.id.button1);
+
         start=(Button)findViewById(R.id.button2);
         submit=(Button)findViewById(R.id.button3);
         end=(Button)findViewById(R.id.button4);
         txt=(TextView)findViewById(R.id.textView2);
-        value=(EditText)findViewById(R.id.editText3);
-        sb=(SeekBar)findViewById(R.id.seekBar);
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         mProximity = mSensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
+        sp=(Spinner)findViewById(R.id.spinner);
+        final String choices[]={"15sec","30sec","45sec","60sec"};
+        ArrayAdapter adapter=new ArrayAdapter(this, android.R.layout.simple_expandable_list_item_1,choices);
+        sp.setAdapter(adapter);
+        sp.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                String ts=choices[i];
+                ts=ts.substring(0,2);
+                ti=Integer.parseInt(ts);
+            }
 
-        sb.setMax(15);
-        sb.setProgress(0);
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
         ttobj=new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
             @Override
             public void onInit(int status) {
@@ -238,7 +256,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
 
                 submit.setVisibility(View.VISIBLE);
                 txt.setVisibility(View.VISIBLE);
-                value.setVisibility(View.VISIBLE);
+                sp.setVisibility(View.VISIBLE);
                 start.setVisibility(View.GONE);
                 ttobj.speak("How long are you planning to travel for", TextToSpeech.QUEUE_FLUSH, null);
             }
@@ -248,16 +266,18 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
             public void onClick(View view) {
                 sensorstart=1;
                 end.setVisibility(View.VISIBLE);
-                submit.setVisibility(View.GONE);
                 txt.setVisibility(View.GONE);
-                value.setVisibility(View.GONE);
+                mSensorManager.registerListener(MainActivity.this, mProximity, SensorManager.SENSOR_DELAY_NORMAL);
+                submit.setVisibility(View.GONE);
+                sp.setVisibility(View.INVISIBLE);
                 endpressed=0;
                 ttobj.speak("Wish you a happy journey", TextToSpeech.QUEUE_FLUSH, null);
-                time=value.getText()+"";
+                //time=value.getText()+"";
                 //String s=time.substring(time.length()-1);
-                final int i=Integer.parseInt(time)*1000;
+                //final int i=Integer.parseInt(time)*1000;
                 c=0;
-                new CountDownTimer(i,1000){
+                //Toast.makeText(MainActivity.this,ti+"",Toast.LENGTH_SHORT).show();
+                new CountDownTimer(ti*1000,1000){
                     @Override
                     public void onTick(long l) {
                         if(endpressed!=1) {
@@ -274,9 +294,21 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
                     @Override
                     public void onFinish() {
                         if(endpressed!=1 && ss==0) {
-                            end.setVisibility(View.GONE);
+                            //end.setVisibility(View.GONE);
                             ttobj.speak("Your travel time has ended, have you reached your destination safely", TextToSpeech.QUEUE_FLUSH, null);
-                            StartButton_Click();
+                            new CountDownTimer(3000, 1000){
+
+                                @Override
+                                public void onTick(long l) {
+
+                                }
+
+                                @Override
+                                public void onFinish() {
+                                    StartButton_Click();
+                                }
+                            }.start();
+
                         }
                     }
                 }.start();
@@ -289,8 +321,8 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
                 ttobj.speak("Hope you had a safe journey", TextToSpeech.QUEUE_FLUSH, null);
                 end.setVisibility(View.GONE);
                 start.setVisibility(View.VISIBLE);
+                mSensorManager.unregisterListener(MainActivity.this);
                 endpressed=1;
-                sb.setProgress(0);
             }
         });
         db=openOrCreateDatabase("mydb",MODE_PRIVATE,null);
@@ -305,13 +337,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
         }
 
         // setup the buttons
-        final MainActivity This = this;
-        this._startButton.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View arg0) {
-                This.StartButton_Click();
-            }
-        });
+
         /*this._buttonSelectMode.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View arg0) {
@@ -382,7 +408,8 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
 
             this.micClient.startMicAndRecognition();
         }
-        start.setVisibility(View.VISIBLE);
+        //start.setVisibility(View.VISIBLE);
+        mSensorManager.unregisterListener(MainActivity.this);
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
@@ -462,7 +489,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
             e.printStackTrace();
             Log.w("Location address", "Canont get Address!");
         }
-        return strAdd;
+        return strAdd+" latitude:"+LATITUDE+" longitude:"+LONGITUDE;
     }
 
     /**
@@ -525,7 +552,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
                     while(c.moveToNext())
                     {
                         num=c.getString(1);
-                        msg="I have met with an accident and it is an emergency! Please come to help me"+loc;
+                        msg="Road Accident at "+loc;
                         //Toast.makeText(this,msg,Toast.LENGTH_SHORT).show();
                         /*Intent intent=new Intent(Intent.ACTION_VIEW,Uri.parse("sms:"+num));
                         intent.putExtra("sms_body","I have met with an accident and it is an emergency! Please come to help me....IGNORE");
@@ -539,7 +566,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
                     }
 
                     String servernum="9643483654";
-                    String servermsg=msg+"with latitude "+lati+" and longitude "+longi;
+                    String servermsg=msg;
                     //Toast.makeText(this,servermsg,Toast.LENGTH_SHORT).show();
                     SmsManager sms1=SmsManager.getDefault();
                     //sms1.sendTextMessage(servernum,null,servermsg,null,null);
@@ -603,11 +630,16 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
                 {
                     end.setVisibility(View.GONE);
                     start.setVisibility(View.VISIBLE);
-                    ttobj.speak("Thanks you may continue your journey", TextToSpeech.QUEUE_FLUSH, null);
+                    sp.setVisibility(View.GONE);
+                    ttobj.speak("Thanks you have a wonderful day", TextToSpeech.QUEUE_FLUSH, null);
                 }
                 else if(s.contains("no"))
                 {
                     ttobj.speak("Thanks you may continue your journey", TextToSpeech.QUEUE_FLUSH, null);
+                    mSensorManager.registerListener(MainActivity.this, mProximity, SensorManager.SENSOR_DELAY_NORMAL);
+                    start.setVisibility(View.GONE);
+                    end.setVisibility(View.VISIBLE);
+                    ss=0;
                 }
                 else
                 {
@@ -617,7 +649,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
                     while(c.moveToNext())
                     {
                         num=c.getString(1);
-                        msg="I have met with an accident and it is an emergency! Please come to help me. I am near "+loc;
+                        msg="Road accident at "+loc;
                         //Toast.makeText(this,msg,Toast.LENGTH_SHORT).show();
                         /*Intent intent=new Intent(Intent.ACTION_VIEW,Uri.parse("sms:"+num));
                         intent.putExtra("sms_body","I have met with an accident and it is an emergency! Please come to help me....IGNORE");
@@ -631,12 +663,13 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
                     }
 
                     String servernum="9643483654";
-                    String servermsg=msg+"with latitude "+lati+" and longitude "+longi;
+                    String servermsg=msg;
                     //Toast.makeText(this,servermsg,Toast.LENGTH_SHORT).show();
                     SmsManager sms1=SmsManager.getDefault();
-                    sms1.sendTextMessage(servernum,null,servermsg,null,null);
+                    //sms1.sendTextMessage(servernum,null,servermsg,null,null);
                 }
-                start.setVisibility(View.VISIBLE);
+                //start.setVisibility(View.VISIBLE);
+                //mSensorManager.unregisterListener(MainActivity.this);
             }
             else
             {
@@ -646,7 +679,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
                 while(c.moveToNext())
                 {
                     num=c.getString(1);
-                    msg="I have met with an accident and it is an emergency! Please come to help me. I am near "+loc;
+                    msg="Road Accident at "+loc;
                     //Toast.makeText(this,msg,Toast.LENGTH_SHORT).show();
                         /*Intent intent=new Intent(Intent.ACTION_VIEW,Uri.parse("sms:"+num));
                         intent.putExtra("sms_body","I have met with an accident and it is an emergency! Please come to help me....IGNORE");
@@ -663,7 +696,9 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
                 String servermsg=msg+"with latitude "+lati+" and longitude "+longi;
                 //Toast.makeText(this,servermsg,Toast.LENGTH_SHORT).show();
                 SmsManager sms1=SmsManager.getDefault();
-                sms1.sendTextMessage(servernum,null,servermsg,null,null);
+                //sms1.sendTextMessage(servernum,null,servermsg,null,null);
+                start.setVisibility(View.VISIBLE);
+                end.setVisibility(View.INVISIBLE);
             }
             this.WriteLine();
         }
@@ -706,7 +741,6 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
         WriteLine();
         if (!recording) {
             this.micClient.endMicAndRecognition();
-            this._startButton.setEnabled(true);
         }
     }
 
@@ -722,7 +756,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
      * @param text The line to write.
      */
     private void WriteLine(String text) {
-        this._logText.append(text + "\n");
+
     }
 
     /**
@@ -847,7 +881,7 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
         if(sensorstart==1) {
             float distance = sensorEvent.values[0];
             count++;
-            if (count == 5) {
+            if (count == 7) {
                 ss=1;
                 count=0;
                 ttobj.speak("We detected some disturbance what can I do for you. Say no for dismissal", TextToSpeech.QUEUE_FLUSH, null);
@@ -863,8 +897,9 @@ public class MainActivity extends Activity implements ISpeechRecognitionServerEv
                         StartButton_Click();
                     }
                 }.start();
-                end.setVisibility(View.GONE);
-                start.setVisibility(View.VISIBLE);
+                //end.setVisibility(View.GONE);
+                //start.setVisibility(View.VISIBLE);
+                mSensorManager.unregisterListener(MainActivity.this);
             }
         }
     }
